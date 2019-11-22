@@ -2,14 +2,14 @@
 # 使用方法： bash <(curl -Ls https://raw.githubusercontent.com/brivio/gfw/master/gcp.sh)
 # 变量
 v2ray_client_id='c5b501d4-3710-49c5-9623-6dfe8837bcf0'
-
+github_script_url='https://raw.githubusercontent.com/brivio/gfw/master'
 _build_log(){
     printf "*$1\n"
 }
 
 _set_timezone(){
     _build_log "设置时区"
-    timedatectl set-local-rtc 1
+    # timedatectl set-local-rtc 0
     timedatectl set-timezone Asia/Shanghai
 }
 
@@ -20,7 +20,7 @@ _set_ssh(){
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' $sshd_config_file
     
     read -p "reset root password:" password
-    echo "password"|passwd --stdin root 
+    echo "$password"|passwd --stdin root 
     systemctl restart sshd
 }
 
@@ -31,7 +31,7 @@ _install_packages(){
 
 _install_oh_my_zsh(){
     _build_log "安装oh-my-zsh"
-    sh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+    sh -c "$(curl -fsSL $github_script_url/scripts/install-my-zsh.sh)"
     if [[ -f ~/.zshrc ]]; then
         sed -i 's/ZSH_THEME\=\"robbyrussell\"/ZSH_THEME\=\"josh\"/g' ~/.zshrc
         sed -i 's/# DISABLE_AUTO_UPDATE\=\"true\"/DISABLE_AUTO_UPDATE\=\"true\"/g' ~/.zshrc
@@ -75,6 +75,7 @@ _install_nginx(){
 EOF
     read -p "site domain:" domain
 
+    mkdir /etc/nginx/ssl
     cat >/etc/nginx/nginx.conf <<EOF
 user  nginx;
 worker_processes  1;
@@ -126,8 +127,9 @@ http {
 	}
 }
 EOF
-    systemctl start nginx
+    # systemctl start nginx
     systemctl enable nginx
+    printf "need upload certs to /etc/nginx/ssl/"
 }
 
 _set_selinux(){
