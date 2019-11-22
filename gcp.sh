@@ -19,7 +19,7 @@ _set_ssh(){
     sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' $sshd_config_file
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' $sshd_config_file
     
-    read -P "reset root password:" password
+    read -p "reset root password:" password
     echo "password"|passwd --stdin root 
     systemctl restart sshd
 }
@@ -73,7 +73,7 @@ _install_nginx(){
     cat >$web_dir/index.html <<EOF
     <!DOCTYPE html><html lang="en"><head><title></title></head><body><h1 style="text-align: center;">welcome</h1></body></html>
 EOF
-    read -P "site domain:" domain
+    read -p "site domain:" domain
 
     cat >/etc/nginx/nginx.conf <<EOF
 user  nginx;
