@@ -28,7 +28,7 @@ _set_ssh(){
 
 _install_packages(){
     _build_log "安装git、zsh等依赖"
-    yum install -y nmap git zsh zip epel-release net-tools >/dev/null
+    yum install -y wget git zsh zip epel-release net-tools >/dev/null
 }
 
 _install_oh_my_zsh(){
