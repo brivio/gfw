@@ -1,23 +1,32 @@
 #!/bin/bash
 # 使用方法： 
 #    bash <(curl -Ls https://raw.githubusercontent.com/brivio/gfw/master/gcp.sh)
+. ~/sourcecode/deploy/runtime.sh
 
 # 变量
 v2ray_client_id='c5b501d4-3710-49c5-9623-6dfe8837bcf0'
 github_script_url='https://raw.githubusercontent.com/brivio/gfw/master'
+
 _build_log(){
-    printf "*$1\n"
+    printf "$1\n"
 }
 
 _set_timezone(){
     _build_log "设置时区"
-    # timedatectl set-local-rtc 0
     timedatectl set-timezone Asia/Shanghai
 }
 
 _set_ssh(){
-    _build_log "设置sshd"
     sshd_config_file=/etc/ssh/sshd_config
+
+    if [[ ! -f $sshd_config_file ]];then
+        return
+    fi
+    if [[ $(cat /etc/ssh/sshd_config|grep 'PermitRootLogin no'|wc -l) -eq 0 ]];then
+        return
+    fi
+
+    _build_log "设置sshd"
     sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' $sshd_config_file
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' $sshd_config_file
     
@@ -135,23 +144,27 @@ EOF
 }
 
 _set_selinux(){
-    _build_log "设置selinux"
-    sed -i 's/SELINUX\=enforcing/SELINUX\=disabled/g' /etc/selinux/config
-    setsebool -P httpd_can_network_connect 1
+    if type setsebool &>/dev/null;then
+        _build_log "设置selinux"
+        sed -i 's/SELINUX\=enforcing/SELINUX\=disabled/g' /etc/selinux/config
+        setsebool -P httpd_can_network_connect 1    
+    fi
 }
 
 _set_ports(){
-    _build_log "开放一些端口号"
-    for port in 80 443
-    do
-        firewall-cmd --permanent --zone=public --add-port=$port/tcp >/dev/null
-    done
-    firewall-cmd --reload
-    firewall-cmd --zone=public --list-ports
+    if type firewall-cmd &>/dev/null;then
+        _build_log "开放一些端口号"
+        for port in 80 443 8989
+        do
+            firewall-cmd --permanent --zone=public --add-port=$port/tcp >/dev/null
+        done
+        firewall-cmd --reload
+        firewall-cmd --zone=public --list-ports    
+    fi
 }
 
 _set_timezone
-# _set_ssh
+_set_ssh
 _install_packages
 _install_oh_my_zsh
 _install_v2ray
