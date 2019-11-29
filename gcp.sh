@@ -1,8 +1,6 @@
 #!/bin/bash
 # 使用方法： 
 #    bash <(curl -Ls https://raw.githubusercontent.com/brivio/gfw/master/gcp.sh)
-. ~/sourcecode/deploy/runtime.sh
-
 # 变量
 v2ray_client_id='c5b501d4-3710-49c5-9623-6dfe8837bcf0'
 github_script_url='https://raw.githubusercontent.com/brivio/gfw/master'
