@@ -1,6 +1,7 @@
 #!/bin/bash
 # 使用方法： 
 #    bash <(curl -Ls https://raw.githubusercontent.com/brivio/gfw/master/gcp.sh)
+#
 # 变量
 v2ray_client_id='c5b501d4-3710-49c5-9623-6dfe8837bcf0'
 github_script_url='https://raw.githubusercontent.com/brivio/gfw/master'
@@ -10,8 +11,21 @@ COLOR_GREEN="\033[32m"
 COLOR_YELLOW="\033[33m"
 COLOR_BLUE="\033[34m"
 COLOR_END="\033[0m"
+
 _build_log(){
-    printf "${COLOR_RED}$1${COLOR_END}\n"
+    step=${step:=0}
+    step=$(_expr "$step + 1")
+    printf "${COLOR_RED}$step)、$1${COLOR_END}\n"
+}
+
+_command_exist() {
+    type "$1" &> /dev/null
+}
+
+_install_crontab(){
+    if [[ $(cat /etc/crontab|grep -F "$1"|wc -l) -eq 0 ]];then
+        echo "$1" |tee -a /etc/crontab > /dev/null
+    fi
 }
 
 _set_timezone(){
@@ -44,8 +58,12 @@ _install_packages(){
 }
 
 _install_oh_my_zsh(){
+    if [[ -d ~/.oh-my-zsh ]];then
+        return
+    fi
+
     _build_log "安装oh-my-zsh"
-    sh -c "$(curl -fsSL $github_script_url/scripts/install-my-zsh.sh)"
+    sh -c "$(curl -fsSL $github_script_url/scripts/install-my-zsh.sh)" &>/dev/null
     if [[ -f ~/.zshrc ]]; then
         sed -i 's/ZSH_THEME\=\"robbyrussell\"/ZSH_THEME\=\"josh\"/g' ~/.zshrc
         sed -i 's/# DISABLE_AUTO_UPDATE\=\"true\"/DISABLE_AUTO_UPDATE\=\"true\"/g' ~/.zshrc
@@ -53,6 +71,10 @@ _install_oh_my_zsh(){
 }
 
 _install_v2ray(){
+    if [[ -f /usr/bin/v2ray/v2ray ]];then
+        return    
+    fi
+
     _build_log "安装v2ray"
     bash <(curl -L -s https://install.direct/go.sh) &>/dev/null
     cat >/etc/v2ray/config.json <<EOF
@@ -79,6 +101,9 @@ EOF
 }
 
 _install_nginx(){
+    if _command_exist nginx;then
+        return
+    fi
     _build_log "安装nginx"
     rpm -ivh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm >/dev/null
     yum install -y nginx >/dev/null
@@ -89,7 +114,6 @@ _install_nginx(){
 EOF
     read -p "site domain:" domain
 
-    mkdir /etc/nginx/ssl
     cat >/etc/nginx/nginx.conf <<EOF
 user  nginx;
 worker_processes  1;
@@ -111,12 +135,18 @@ http {
     keepalive_timeout  65;
     include /etc/nginx/conf.d/*.conf;
 	
+    server{
+        server_name $domain;
+		listen      80;
+        return      301 https://$server_name$request_uri;
+    }
+
 	server{
 		server_name $domain;
 		listen            443 ssl;
 		autoindex         on;
         
-        root html;
+        root /var/www/html/;
 		location / {
             root   /var/www/html/;
             index  index.html index.htm index.php;
@@ -137,25 +167,33 @@ http {
 EOF
     # systemctl start nginx
     systemctl enable nginx
+    _install_crontab "* 1 * * * root rm -rf /var/log/nginx/*.log"
+}
+
+_install_ssl(){
     _build_log "设置ssl证书"
-    wget https://dl.eff.org/certbot-auto
-    mv certbot-auto /usr/local/bin/certbot-auto
-    chown root /usr/local/bin/certbot-auto
-    chmod 0755 /usr/local/bin/certbot-auto
+    if  _command_exist certbot-auto;then
+        wget https://dl.eff.org/certbot-auto
+        mv certbot-auto /usr/local/bin/certbot-auto
+        chown root /usr/local/bin/certbot-auto
+        chmod 0755 /usr/local/bin/certbot-auto    
+    fi
     /usr/local/bin/certbot-auto --nginx
-    # echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && /usr/local/bin/certbot-auto renew" | sudo tee -a /etc/crontab > /dev/null
+    
+    _install_crontab "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && /usr/local/bin/certbot-auto renew"
 }
 
 _set_selinux(){
-    if type setsebool &>/dev/null;then
+    if _command_exist setsebool;then
         _build_log "设置selinux"
         sed -i 's/SELINUX\=enforcing/SELINUX\=disabled/g' /etc/selinux/config
-        setsebool -P httpd_can_network_connect 1    
+        setsebool -P httpd_can_network_connect 1
+        setenforce 0
     fi
 }
 
 _set_ports(){
-    if type firewall-cmd &>/dev/null;then
+    if _command_exist firewall-cmd;then
         _build_log "开放一些端口号"
         for port in 80 443 8989
         do
@@ -172,5 +210,6 @@ _install_packages
 _install_oh_my_zsh
 _install_v2ray
 _install_nginx
+_install_ssl
 _set_selinux
 _set_ports
