@@ -29,13 +29,13 @@ _set_ssh(){
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' $sshd_config_file
     
     read -p "reset root password:" password
-    echo "$password"|passwd --stdin root >/dev/null
+    echo "$password"|passwd --stdin root &>/dev/null
     systemctl restart sshd
 }
 
 _install_packages(){
     _build_log "安装git、zsh等依赖"
-    yum install -y nmap git zsh zip epel-release net-tools >/dev/null
+    yum install -y autoconf automake libtool nmap git zsh zip epel-release net-tools &>/dev/null
 }
 
 _install_oh_my_zsh(){
@@ -49,7 +49,7 @@ _install_oh_my_zsh(){
 
 _install_v2ray(){
     _build_log "安装v2ray"
-    bash <(curl -L -s https://install.direct/go.sh) >/dev/null
+    bash <(curl -L -s https://install.direct/go.sh) &>/dev/null
     cat >/etc/v2ray/config.json <<EOF
 {
   "inbounds": [{
