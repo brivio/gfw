@@ -5,8 +5,13 @@
 v2ray_client_id='c5b501d4-3710-49c5-9623-6dfe8837bcf0'
 github_script_url='https://raw.githubusercontent.com/brivio/gfw/master'
 
+COLOR_RED="\033[31m"
+COLOR_GREEN="\033[32m"
+COLOR_YELLOW="\033[33m"
+COLOR_BLUE="\033[34m"
+COLOR_END="\033[0m"
 _build_log(){
-    printf "$1\n"
+    printf "${COLOR_RED}$1${COLOR_END}\n"
 }
 
 _set_timezone(){
@@ -35,7 +40,7 @@ _set_ssh(){
 
 _install_packages(){
     _build_log "安装git、zsh等依赖"
-    yum install -y autoconf automake libtool nmap git zsh zip epel-release net-tools &>/dev/null
+    yum install -y autoconf automake libtool nmap git zsh zip epel-release net-tools wget &>/dev/null
 }
 
 _install_oh_my_zsh(){
@@ -112,12 +117,6 @@ http {
 		autoindex         on;
         
         root html;
-        ssl_certificate   ssl/$domain.pem;
-        ssl_certificate_key  ssl/$domain.key;
-        ssl_session_timeout 5m;
-        ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE:ECDH:AES:HIGH:!NULL:!aNULL:!MD5:!ADH:!RC4;
-        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-        ssl_prefer_server_ciphers on;
 		location / {
             root   /var/www/html/;
             index  index.html index.htm index.php;
@@ -138,7 +137,13 @@ http {
 EOF
     # systemctl start nginx
     systemctl enable nginx
-    echo "need upload certs to /etc/nginx/ssl/"
+    _build_log "设置ssl证书"
+    wget https://dl.eff.org/certbot-auto
+    mv certbot-auto /usr/local/bin/certbot-auto
+    chown root /usr/local/bin/certbot-auto
+    chmod 0755 /usr/local/bin/certbot-auto
+    /usr/local/bin/certbot-auto --nginx
+    # echo "0 0,12 * * * root python -c 'import random; import time; time.sleep(random.random() * 3600)' && /usr/local/bin/certbot-auto renew" | sudo tee -a /etc/crontab > /dev/null
 }
 
 _set_selinux(){
