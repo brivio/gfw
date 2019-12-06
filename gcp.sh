@@ -146,11 +146,13 @@ http {
 		listen            443 ssl;
 		autoindex         on;
         
-        root /var/www/html/;
+        set $webroot      "/var/www/html";
+
 		location / {
-            root   /var/www/html/;
+            root   $webroot;
             index  index.html index.htm index.php;
 		}
+
         location /ray { 
             proxy_redirect off;
             proxy_pass http://127.0.0.1:27635;
