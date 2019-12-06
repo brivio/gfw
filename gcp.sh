@@ -12,6 +12,10 @@ COLOR_YELLOW="\033[33m"
 COLOR_BLUE="\033[34m"
 COLOR_END="\033[0m"
 
+_expr(){
+    awk "BEGIN{printf $1}"
+}
+
 _build_log(){
     step=${step:=0}
     step=$(_expr "$step + 1")
