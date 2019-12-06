@@ -1,7 +1,8 @@
 #!/bin/bash
 # 使用方法： 
-#    bash <(curl -Ls https://raw.githubusercontent.com/brivio/gfw/master/gcp.sh)
+#       bash <(curl -Ls https://raw.githubusercontent.com/brivio/gfw/master/gcp.sh)
 #
+#       bash <(wget -O- https://raw.githubusercontent.com/brivio/gfw/master/gcp.sh)
 # 变量
 v2ray_client_id='c5b501d4-3710-49c5-9623-6dfe8837bcf0'
 github_script_url='https://raw.githubusercontent.com/brivio/gfw/master'
@@ -178,7 +179,7 @@ EOF
 
 _install_ssl(){
     _build_log "设置ssl证书"
-    if  _command_exist certbot-auto;then
+    if ! _command_exist certbot-auto;then
         wget https://dl.eff.org/certbot-auto
         mv certbot-auto /usr/local/bin/certbot-auto
         chown root /usr/local/bin/certbot-auto
