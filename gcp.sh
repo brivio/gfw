@@ -151,10 +151,10 @@ http {
 		listen            443 ssl;
 		autoindex         on;
         
-        set $webroot      "/var/www/html";
+        set \$webroot      "/var/www/html";
 
 		location / {
-            root   $webroot;
+            root   \$webroot;
             index  index.html index.htm index.php;
 		}
 
