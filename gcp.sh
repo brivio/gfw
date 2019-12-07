@@ -1,8 +1,9 @@
 #!/bin/bash
-# 使用方法： 
+# 使用方法：
 #       bash <(curl -Ls https://raw.githubusercontent.com/brivio/gfw/master/gcp.sh)
 #
 #       bash <(wget -O- https://raw.githubusercontent.com/brivio/gfw/master/gcp.sh)
+
 # 变量
 v2ray_client_id='c5b501d4-3710-49c5-9623-6dfe8837bcf0'
 github_script_url='https://raw.githubusercontent.com/brivio/gfw/master'
@@ -27,10 +28,14 @@ _command_exist() {
     type "$1" &> /dev/null
 }
 
-_install_crontab(){
-    if [[ $(cat /etc/crontab|grep -F "$1"|wc -l) -eq 0 ]];then
-        echo "$1" |tee -a /etc/crontab > /dev/null
+_append(){
+    if [[ $(cat $2|grep -F "$1"|wc -l) -eq 0 ]];then
+        echo "$1" |tee -a $2 > /dev/null
     fi
+}
+
+_install_crontab(){
+    _append "$1" /etc/crontab
 }
 
 _set_timezone(){
@@ -40,14 +45,14 @@ _set_timezone(){
 
 _set_ssh(){
     sshd_config_file=/etc/ssh/sshd_config
-
+    
     if [[ ! -f $sshd_config_file ]];then
         return
     fi
     if [[ $(cat /etc/ssh/sshd_config|grep 'PermitRootLogin no'|wc -l) -eq 0 ]];then
         return
     fi
-
+    
     _build_log "设置sshd"
     sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' $sshd_config_file
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' $sshd_config_file
@@ -66,7 +71,7 @@ _install_oh_my_zsh(){
     if [[ -d ~/.oh-my-zsh ]];then
         return
     fi
-
+    
     _build_log "安装oh-my-zsh"
     sh -c "$(curl -fsSL $github_script_url/scripts/install-my-zsh.sh)" &>/dev/null
     if [[ -f ~/.zshrc ]]; then
@@ -77,9 +82,9 @@ _install_oh_my_zsh(){
 
 _install_v2ray(){
     if [[ -f /usr/bin/v2ray/v2ray ]];then
-        return    
+        return
     fi
-
+    
     _build_log "安装v2ray"
     bash <(curl -L -s https://install.direct/go.sh) &>/dev/null
     cat >/etc/v2ray/config.json <<EOF
@@ -118,7 +123,7 @@ _install_nginx(){
     <!DOCTYPE html><html lang="en"><head><title></title></head><body><h1 style="text-align: center;">welcome</h1></body></html>
 EOF
     read -p "site domain:" domain
-
+    
     cat >/etc/nginx/nginx.conf <<EOF
 user  nginx;
 worker_processes  1;
@@ -139,18 +144,18 @@ http {
     sendfile        on;
     keepalive_timeout  65;
     include /etc/nginx/conf.d/*.conf;
-	
+
     server{
         server_name $domain;
 		listen      80;
-        return      301 https://$server_name$request_uri;
+        return      301 https://\$server_name\$request_uri;
     }
 
 	server{
 		server_name $domain;
 		listen            443 ssl;
 		autoindex         on;
-        
+
         set \$webroot      "/var/www/html";
 
 		location / {
@@ -158,7 +163,7 @@ http {
             index  index.html index.htm index.php;
 		}
 
-        location /ray { 
+        location /ray {
             proxy_redirect off;
             proxy_pass http://127.0.0.1:27635;
             proxy_http_version 1.1;
@@ -183,7 +188,7 @@ _install_ssl(){
         wget https://dl.eff.org/certbot-auto
         mv certbot-auto /usr/local/bin/certbot-auto
         chown root /usr/local/bin/certbot-auto
-        chmod 0755 /usr/local/bin/certbot-auto    
+        chmod 0755 /usr/local/bin/certbot-auto
     fi
     /usr/local/bin/certbot-auto --nginx
     
@@ -202,12 +207,23 @@ _set_selinux(){
 _set_ports(){
     if _command_exist firewall-cmd;then
         _build_log "开放一些端口号"
+        res=$(firewall-cmd --zone=public --list-ports)
         for port in 80 443 8989
         do
-            firewall-cmd --permanent --zone=public --add-port=$port/tcp >/dev/null
+            if [[ $(echo "$res"|grep -F "$port/tcp"|wc -l) -eq 0 ]];then
+                firewall-cmd --permanent --zone=public --add-port=$port/tcp >/dev/null    
+            fi
         done
         firewall-cmd --reload
-        firewall-cmd --zone=public --list-ports    
+        firewall-cmd --zone=public --list-ports
+    fi
+}
+
+_enable_bbr(){
+    if [[ $(lsmod|grep bbr|wc -l) -eq 0 ]];then
+        _append 'net.core.default_qdisc=fq' /etc/sysctl.conf
+        _append 'net.ipv4.tcp_congestion_control=bbr' /etc/sysctl.conf
+        sysctl -p
     fi
 }
 
@@ -220,3 +236,4 @@ _install_nginx
 _install_ssl
 _set_selinux
 _set_ports
+_enable_bbr
