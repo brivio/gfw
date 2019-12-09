@@ -80,6 +80,23 @@ _install_oh_my_zsh(){
     fi
 }
 
+_install_ss(){
+    cd /etc/yum.repos.d
+    wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-7/librehat-shadowsocks-epel-7.repo
+    yum install shadowsocks-libev
+    cat >/etc/shadowsocks-libev/config.json <<eot
+{
+    "server":"0.0.0.0",
+    "server_port":8989,
+    "local_port":1080,
+    "password":"45290708",
+    "timeout":60,
+    "method":"rc4-md5"
+}
+eot
+    cd ~
+}
+
 _install_v2ray(){
     if [[ -f /usr/bin/v2ray/v2ray ]];then
         return
