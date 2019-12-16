@@ -244,6 +244,11 @@ _enable_bbr(){
     fi
 }
 
+if [[ $(whoami) != 'root' ]];then
+    echo "需要root方式运行"
+    exit
+fi
+
 _set_timezone
 _set_ssh
 _install_packages
