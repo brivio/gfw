@@ -81,6 +81,10 @@ _install_oh_my_zsh(){
 }
 
 _install_ss(){
+    if _command_exist ss-server;then
+        return
+    fi
+    _build_log "安装shadowsocks"
     cd /etc/yum.repos.d
     wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-7/librehat-shadowsocks-epel-7.repo
     yum install shadowsocks-libev
@@ -255,6 +259,7 @@ _install_packages
 _install_oh_my_zsh
 _install_v2ray
 _install_nginx
+_install_ss
 _install_ssl
 _set_selinux
 _set_ports
