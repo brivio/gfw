@@ -56,7 +56,14 @@ _set_ssh(){
     _build_log "设置sshd"
     sed -i 's/PermitRootLogin no/PermitRootLogin yes/g' $sshd_config_file
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' $sshd_config_file
-    
+
+    if [[ ! -d ~/.ssh ]];then
+        mkdir -p ~/.ssh
+    fi
+    cat >~/.ssh/authorized_keys <<eot
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDS7A7F9mhgJEaf9w+vQhPwtnIf2jWGsavOAULdfZl/dOBXTMS/WOPTvElcFeXylKrfzzfV9Pgy4qNsg+NXyOiGDqjHJEjJ4f7JTVfex6q5JYNpFayMRMo8xAT9wfJj99grYzSFB8QUJF4Sv6XsByjlXOubxZhf2NC8hCsUPbolYla4JvQnRNe28rX7rW2odEyskb5XHxoSmx9atOa2K/zZMSB4ndn6kTaZN3M2gUeDke5qGADQSrNRuwBjWrEmKAEEzWxaz0pp8AffU1ucH4eQWoQdlNDXqESkV3kvrrqPkUkgaxgGdnSqmyyQ4EFrIB+NyNY7eST0By2D47G7mOIL Administrator@BRIVIO-PC
+eot
+
     read -p "reset root password:" password
     echo "$password"|passwd --stdin root &>/dev/null
     systemctl restart sshd
@@ -64,7 +71,7 @@ _set_ssh(){
 
 _install_packages(){
     _build_log "安装git、zsh等依赖"
-    yum install -y autoconf automake libtool nmap git zsh zip epel-release net-tools wget &>/dev/null
+    yum install -y autoconf automake libtool nmap git zsh zip epel-release net-tools wget
 }
 
 _install_oh_my_zsh(){
@@ -87,7 +94,7 @@ _install_ss(){
     _build_log "安装shadowsocks"
     cd /etc/yum.repos.d
     wget https://copr.fedorainfracloud.org/coprs/librehat/shadowsocks/repo/epel-7/librehat-shadowsocks-epel-7.repo
-    yum install shadowsocks-libev
+    yum install -y shadowsocks-libev
     cat >/etc/shadowsocks-libev/config.json <<eot
 {
     "server":"0.0.0.0",
