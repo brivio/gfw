@@ -3,6 +3,11 @@ web_dir=$1
 server_id=$2
 dms_script=/opt/dms.sh
 
+if [[ ! -r $web_dir/index.php ]];then
+    echo "网站目录不存在"
+    exit
+fi
+
 cat >$dms_script <<eof
 #!/bin/bash
 cmd="php $web_dir/index.php api/task/dms 1"
@@ -52,3 +57,4 @@ eof
 
 # systemctl start dms
 # systemctl status dms
+# systemctl enable dms
