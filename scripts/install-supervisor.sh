@@ -1,6 +1,6 @@
 #!/bin/bash
 pip install supervisor
-if [[ -r /etc/supervisord.conf ]];then
+if [[ ! -r /etc/supervisord.conf ]];then
     echo_supervisord_conf > /etc/supervisord.conf    
 fi
 supervisord
