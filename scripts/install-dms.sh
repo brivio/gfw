@@ -29,6 +29,7 @@ elif [[ \$1 = 'restart' ]];then
     _stop
 fi
 eof
+chmod -R 777 $dms_script
 
 cat >/usr/lib/systemd/system/dms.service <<eof
 [Unit]
