@@ -10,7 +10,7 @@ fi
 
 cat >$dms_script <<eof
 #!/bin/bash
-cmd="php $web_dir/index.php api/task/dms 1"
+cmd="php $web_dir/index.php api/task/dms $server_id"
 _start()
 {
     if [[ \$(ps aux|grep "\$cmd"|grep -v grep|wc -l) != "1" ]];then
