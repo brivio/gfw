@@ -1,14 +1,20 @@
 #!/bin/bash
 web_dir=$1
 server_id=$2
-service_name=dms
+service_name=sync_oss
 service_script=/opt/$service_name.sh
-cmd="php $web_dir/index.php api/task/dms $server_id"
+cmd="php $web_dir/index.php api/task/sync_oss $server_id"
 
 if [[ ! -r $web_dir/index.php ]];then
     echo "网站目录不存在"
     exit
 fi
+
+if [[ ! -d /opt/bin ]];then
+    mkdir -p /opt/bin
+fi
+wget http://gosspublic.alicdn.com/ossutil/1.6.10/ossutil64 -O /opt/bin/ossutil64
+chmod 777 /opt/bin/ossutil64
 
 cat >$service_script <<eof
 #!/bin/bash
