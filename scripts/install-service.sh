@@ -1,9 +1,4 @@
 #!/bin/bash
-web_dir=$(pwd)/../..
-service_name=cjl_order
-cmd="php $web_dir/index.php api/task/index"
-
-
 service_script=/opt/$service_name.sh
 service_file=/usr/lib/systemd/system/$service_name.service
 if [[ $1 = 'uninstall' ]];then
