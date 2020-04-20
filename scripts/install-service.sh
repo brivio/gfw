@@ -1,7 +1,8 @@
 #!/bin/bash
+. $1
 service_script=/opt/$service_name.sh
 service_file=/usr/lib/systemd/system/$service_name.service
-if [[ $1 = 'uninstall' ]];then
+if [[ $2 = 'uninstall' ]];then
     systemctl stop $service_name
     systemctl disable $service_name
     if [[ -f $service_script ]];then
@@ -60,6 +61,6 @@ ExecStop=$service_script stop
 WantedBy=multi-user.target
 eof
 
-systemctl enable $service_name
-systemctl restart $service_name
-systemctl status $service_name
+# systemctl enable $service_name
+# systemctl restart $service_name
+# systemctl status $service_name
