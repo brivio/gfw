@@ -1,4 +1,7 @@
 #!/bin/bash
+# 使用办法：
+#       bash <(curl -Ls https://gitee.com/brivio/gfw/raw/master/scripts/install-service.sh) ./service.config.sh
+
 . $1
 service_script=/opt/$service_name.sh
 service_file=/usr/lib/systemd/system/$service_name.service
